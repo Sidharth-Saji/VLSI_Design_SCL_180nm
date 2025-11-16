@@ -1,0 +1,50 @@
+############################################################################################################################
+# Simulation commands
+############################################################################################################################
+
+# Instantiate Synopsys 
+
+csh
+source /home/synopsys/cshrc
+
+# RTL sim
+vcs -R -gui -full64 -kdb rca_tb.v ../rtl/RCA.v ../rtl/FA.v ../rtl/register.v
+
+
+# Goto DC Folder -- csh and source, Then invoke dc_shell
+csh
+source /home/synopsys/cshrc
+dc_shell
+
+
+# Copy paste each commands in run_dc.tcl file -- synthesis
+# or exit and run:  dc_shell -f run_dc.tcl
+
+start gui -> start gui for seeing GLS 
+
+
+
+
+
+
+
+# GLS functional sim
+vcs -R -gui -full64 -kdb rca_tb.v ../DC/results/RCA.mapped.v ../SIM/tsl18fs120_scl.v
+
+# GLS timing sim with SDF
+vcs -R -gui -full64 -kdb +neg_tchk +sdfverbose rca_tb_sdf.v ../DC/results/RCA.mapped.v tsl18fs120_scl.v
+
+# Power calculation with SAIF file
+# https://digitalsystemdesign.in/power-analysis-using-synopsys/?srsltid=AfmBOoptDGbl5HwhKSW1f6rYySTQzX7QU8V2t7709wo8oBkXxYjv4wp6
+
+# In SIM folder
+# vpd2vcd inter.vpd inter.vcd
+vcd2saif -input rca_tb.vcd -output rca_tb.saif
+
+# In dc_shell
+report_power > init_power.rpt
+read_saif -input ../SIM/inter.saif -instance_name rca_tb -verbose
+compile -exact_map
+report_power > gls_power.rpt
+
+
